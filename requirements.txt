@@ -1,0 +1,12 @@
+# Core GUI (built-in with Python)
+# tkinter — included with Python standard library
+
+# Image compression
+Pillow>=10.0.0
+pillow-heif>=0.13.0   # HEIC/HEIF support (optional but recommended)
+
+# Enhanced glass UI effects on Windows (optional)
+pywinstyles>=1.8
+
+# ffmpeg is required separately for video compression — see README
+# CustomTkinter is imported optionally — not required for core functionality

@@ -15,6 +15,7 @@ build/
 build/
 dist/
 *.exe
+!FabCompressor.exe
 
 # Virtual environments
 .venv/

@@ -13,7 +13,7 @@
 
 </div>
 
-> **[⬇️ Download FabCompressor.exe (Windows)](FabCompressor.exe)** *(Just double-click and run!)*
+> **[⬇️ Download FabCompressor.exe (Windows)](https://github.com/NB6RULES/FabCompressor/raw/main/FabCompressor.exe)** *(Just double-click and run!)*
 > 
 > *No installation required. (ffmpeg must be separately installed for video compression).*
 

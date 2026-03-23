@@ -56,54 +56,56 @@ MAX_IMG_BYTES  = 100 * 1024
 MAX_IMG_DIM    = 1600
 
 # ══════════════════════════════════════════════════════════════════════════════
-# macOS Sonoma-Inspired Design System
+# Liquid Glass & Tonal Depth — Design System (Stitch/fabcompressor spec)
 # ══════════════════════════════════════════════════════════════════════════════
 
-# ── Deep Glass Background ─────────────────────────────────────────────────────
-GLASS_BG        = "#0d0d12"      # True dark, feels like depth
-GLASS_SURFACE   = "#1a1a24"      # Card background, subtle lift
-GLASS_ELEVATED  = "#242432"      # Hover states, elevated surfaces
-GLASS_BORDER    = "#2a2a3a"      # Subtle borders
-GLASS_HIGHLIGHT = "#3a3a4d"      # Focus rings, active states
-GLASS_OVERLAY   = "#252530"    # Subtle overlay for glass effect (approximated)
+# ── Surface Hierarchy (No-Line Rule: boundaries via tonal shifts only) ────────
+GLASS_BG               = "#0e0e10"   # surface — base layer
+GLASS_SURFACE          = "#19191c"   # surface-container — raised cards
+GLASS_ELEVATED         = "#1f1f22"   # surface-container-high — modals/hovers
+GLASS_HIGHLIGHT        = "#252528"   # surface-container-highest — focus/active
+GLASS_BORDER           = "#252528"   # surface-variant — ghost border at low opacity
+GLASS_INSET            = "#000000"   # surface-container-lowest — inset/recessed
 
-# ── Vibrant Accent Colors (macOS Sonoma) ──────────────────────────────────────
-ACCENT_BLUE     = "#0A84FF"      # Primary action color
-ACCENT_BLUE_DIM = "#0066CC"      # Pressed state
-ACCENT_PURPLE   = "#BF5AF2"      # Secondary accent
-ACCENT_CYAN     = "#5AC8FA"      # Info, links
-ACCENT_GREEN    = "#32D74B"      # Success
-ACCENT_YELLOW   = "#FFD60A"      # Warning
-ACCENT_ORANGE   = "#FF9F0A"      # Alert
-ACCENT_RED      = "#FF453A"      # Error, destructive
-ACCENT_PINK     = "#FF6482"      # Special highlight
+# ── Accent Palette ────────────────────────────────────────────────────────────
+ACCENT_BLUE     = "#7fafff"   # primary
+ACCENT_BLUE_DIM = "#4593ff"   # primary-fixed-dim (pressed)
+ACCENT_PURPLE   = "#9392ff"   # secondary
+ACCENT_TERTIARY = "#d277ff"   # tertiary
+ACCENT_CYAN     = "#9392ff"   # alias → secondary for info/links
+ACCENT_GREEN    = "#32D74B"   # success (keep vibrant)
+ACCENT_YELLOW   = "#FFD60A"   # warning
+ACCENT_ORANGE   = "#FF9F0A"   # alert
+ACCENT_RED      = "#ff716c"   # error (Stitch spec)
+ACCENT_PINK     = "#d57fff"   # tertiary-fixed-dim
 
 # ── Text Hierarchy ────────────────────────────────────────────────────────────
-TEXT_PRIMARY    = "#FFFFFF"      # Headers, important text
-TEXT_SECONDARY  = "#A1A1AA"      # Body text, descriptions
-TEXT_TERTIARY   = "#71717A"      # Captions, labels
-TEXT_QUATERNARY = "#52525B"      # Disabled, placeholder
+TEXT_PRIMARY    = "#fefbfe"   # on-surface
+TEXT_SECONDARY  = "#acaaad"   # on-surface-variant
+TEXT_TERTIARY   = "#767577"   # outline
+TEXT_QUATERNARY = "#48474a"   # outline-variant (disabled/placeholder)
 
 SUCCESS = ACCENT_GREEN
 WARNING = ACCENT_YELLOW
 ERROR   = ACCENT_RED
-INFO    = ACCENT_CYAN
+INFO    = ACCENT_PURPLE
 
-# ── Typography (SF Pro inspired) ──────────────────────────────────────────────
-_FF = "Segoe UI"
+# ── Typography — Manrope headlines, Inter/Segoe body ─────────────────────────
+_FF      = "Segoe UI"
+_FF_DISP = "Segoe UI Variable Display"   # closest headline stand-in for Manrope
 _FF_BOLD = "Segoe UI Semibold"
-FONT_DISPLAY  = (_FF_BOLD, 32, "bold")
-FONT_TITLE    = (_FF, 24, "normal")
-FONT_HEADLINE = (_FF_BOLD, 15, "bold")
+FONT_DISPLAY  = (_FF_DISP, 32, "bold")
+FONT_TITLE    = (_FF_DISP, 22, "normal")
+FONT_HEADLINE = (_FF_DISP, 15, "bold")
 FONT_BODY     = (_FF, 13, "normal")
 FONT_BODY_MED = (_FF, 13, "bold")
 FONT_CAPTION  = (_FF, 11, "normal")
 FONT_CAPTION_MED = (_FF, 11, "bold")
-FONT_OVERLINE = (_FF, 10, "bold")
+FONT_OVERLINE = (_FF, 9, "bold")
 FONT_MONO     = ("Cascadia Code", 11)
 FONT_MONO_ALT = ("Consolas", 11)
 
-# ── Spacing (4pt base grid) ───────────────────────────────────────────────────
+# ── Spacing (8pt base grid, 2× scale per Stitch spec) ────────────────────────
 XXS =  2
 XS  =  4
 SM  =  8
@@ -113,14 +115,14 @@ XL  = 24
 XXL = 32
 XXXL = 48
 
-# ── Corner Radii ──────────────────────────────────────────────────────────────
-RADIUS_SM = 6
-RADIUS_MD = 10
-RADIUS_LG = 14
+# ── Corner Radii — cards xl (24px), interactive md (8px per ROUND_EIGHT) ─────
+RADIUS_SM =  4
+RADIUS_MD =  8
+RADIUS_LG = 12
 RADIUS_XL = 20
 
-# ── Shadows (simulated via layered frames) ────────────────────────────────────
-SHADOW_COLOR = "#08080a"
+# ── Shadows — diffused ambient (40-60px blur simulated via layering) ──────────
+SHADOW_COLOR = "#0e0e10"   # tinted on-surface, never pure black
 
 SOCIALS = [
     ("🎓", "Fab Academy", "https://fabacademy.org/2026/labs/kochi/students/nadec-biju/"),
@@ -135,9 +137,16 @@ SOCIALS = [
 # ─────────────────────────────────────────────────────────────────────────────
 
 def find_ffmpeg():
+    # 1. Bundled inside the PyInstaller package (highest priority)
+    if hasattr(sys, '_MEIPASS'):
+        bundled = os.path.join(sys._MEIPASS, 'ffmpeg.exe')
+        if os.path.isfile(bundled):
+            return bundled
+    # 2. System PATH
     ff = shutil.which("ffmpeg")
     if ff:
         return ff
+    # 3. Common install locations
     for c in [r"C:\ffmpeg\bin\ffmpeg.exe",
               r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
               r"C:\Tools\ffmpeg\bin\ffmpeg.exe"]:
@@ -147,10 +156,15 @@ def find_ffmpeg():
 
 
 def ffprobe_duration(path, ffmpeg_path):
+    # Prefer bundled ffprobe sitting alongside ffmpeg
     probe = os.path.join(os.path.dirname(ffmpeg_path),
                          "ffprobe.exe" if sys.platform == "win32" else "ffprobe")
     if not os.path.isfile(probe):
-        probe = shutil.which("ffprobe") or "ffprobe"
+        # Also check _MEIPASS root when ffmpeg path was resolved elsewhere
+        if hasattr(sys, '_MEIPASS'):
+            probe = os.path.join(sys._MEIPASS, 'ffprobe.exe')
+        if not os.path.isfile(probe):
+            probe = shutil.which("ffprobe") or "ffprobe"
     try:
         r = subprocess.run(
             [probe, "-v", "quiet", "-print_format", "json", "-show_format", path],
@@ -243,11 +257,11 @@ class AmbientBackground(tk.Canvas):
         super().__init__(parent, highlightthickness=0, bd=0, bg=GLASS_BG)
         self._t = 0
         self._orbs = [
-            {"cx": 0.15, "cy": 0.15, "r": 500, "col": "#0a0a1a", "spd": 0.0004, "ph": 0.0},
-            {"cx": 0.85, "cy": 0.80, "r": 450, "col": "#0d1020", "spd": 0.0003, "ph": 1.5},
-            {"cx": 0.50, "cy": 0.50, "r": 350, "col": "#08101a", "spd": 0.0005, "ph": 3.0},
-            {"cx": 0.20, "cy": 0.85, "r": 280, "col": "#0a0815", "spd": 0.00035, "ph": 4.5},
-            {"cx": 0.75, "cy": 0.25, "r": 320, "col": "#080d18", "spd": 0.00045, "ph": 2.0},
+            {"cx": 0.15, "cy": 0.15, "r": 500, "col": "#0d0f16", "spd": 0.0004, "ph": 0.0},   # primary tint
+            {"cx": 0.85, "cy": 0.80, "r": 450, "col": "#0f0d16", "spd": 0.0003, "ph": 1.5},   # secondary tint
+            {"cx": 0.50, "cy": 0.50, "r": 350, "col": "#0a0a12", "spd": 0.0005, "ph": 3.0},   # neutral deep
+            {"cx": 0.20, "cy": 0.85, "r": 280, "col": "#100812", "spd": 0.00035, "ph": 4.5},  # tertiary tint
+            {"cx": 0.75, "cy": 0.25, "r": 320, "col": "#0c0d15", "spd": 0.00045, "ph": 2.0},  # primary-dim tint
         ]
         self.bind("<Configure>", lambda e: self._draw())
         self._animate()
@@ -299,7 +313,7 @@ class GlassCard(tk.Canvas):
         # Inner fill
         self._rounded_rect(1, 1, w-2, h-3, r-1, fill=GLASS_SURFACE, tags="bg")
         # Top highlight line (glass effect)
-        self._rounded_rect(2, 2, w-3, 4, 2, fill="#2a2a38", tags="bg")
+        self._rounded_rect(2, 2, w-3, 4, 2, fill="#232328", tags="bg")
         
         if self._content_frame:
             self.tag_raise(self._content_frame_id)
@@ -340,22 +354,25 @@ class GlassCard(tk.Canvas):
 
 
 class GlassCardSimple(tk.Frame):
-    """Simple frame-based glass card (faster, simpler)."""
+    """
+    Frosted glass card — Liquid Glass spec.
+    Elevation via surface-container tier; no explicit 1px borders (No-Line Rule).
+    Ghost border: surface-variant (#252528) as 2px outer frame at full opacity
+    gives a subtle lift without a hairline.
+    """
     def __init__(self, parent, **kw):
-        # Outer glow layer
         super().__init__(parent, bg=GLASS_BG, **kw)
-        
-        # Border frame
-        self.border = tk.Frame(self, bg=GLASS_BORDER)
-        self.border.pack(fill="both", expand=True, padx=0, pady=0)
-        
-        # Inner surface
-        self.body = tk.Frame(self.border, bg=GLASS_SURFACE)
-        self.body.pack(fill="both", expand=True, padx=1, pady=1)
-        
-        # Top highlight bar for glass effect
-        self.highlight = tk.Frame(self.body, bg="#262630", height=1)
-        self.highlight.pack(fill="x", padx=1, pady=(1, 0))
+
+        # Ghost-border layer: surface-container-highest at 2px gives tactile edge
+        self._ghost = tk.Frame(self, bg=GLASS_HIGHLIGHT)
+        self._ghost.pack(fill="both", expand=True)
+
+        # Card surface: surface-container — one tier above base
+        self.body = tk.Frame(self._ghost, bg=GLASS_SURFACE)
+        self.body.pack(fill="both", expand=True, padx=2, pady=2)
+
+        # Subtle top-edge shimmer (liquid highlight, not a divider)
+        tk.Frame(self.body, bg="#232328", height=1).pack(fill="x", padx=RADIUS_MD, pady=(2, 0))
 
 
 class GlassEntry(tk.Frame):
@@ -365,19 +382,19 @@ class GlassEntry(tk.Frame):
     def __init__(self, parent, textvariable=None, placeholder="", width=None, **kw):
         super().__init__(parent, bg=GLASS_BG)
         
-        # Border container
-        self.border_frame = tk.Frame(self, bg=GLASS_BORDER)
+        # Ghost border — surface-container-highest, not a hairline
+        self.border_frame = tk.Frame(self, bg=GLASS_HIGHLIGHT)
         self.border_frame.pack(fill="both", expand=True)
-        
-        # Inner dark background (inset effect)
-        self.inner = tk.Frame(self.border_frame, bg="#0a0a10")
+
+        # Inset/hollowed look — surface-container-lowest (#000000)
+        self.inner = tk.Frame(self.border_frame, bg=GLASS_INSET)
         self.inner.pack(fill="both", expand=True, padx=1, pady=1)
-        
+
         # Entry widget
         entry_config = {
             "textvariable": textvariable,
             "font": FONT_BODY,
-            "bg": "#0a0a10",
+            "bg": GLASS_INSET,
             "fg": TEXT_PRIMARY,
             "insertbackground": ACCENT_BLUE,
             "relief": "flat",
@@ -395,10 +412,10 @@ class GlassEntry(tk.Frame):
         self.entry.bind("<FocusOut>", self._on_focus_out)
 
     def _on_focus_in(self, e=None):
-        self.border_frame.configure(bg=ACCENT_BLUE)
+        self.border_frame.configure(bg="#3a5a80")   # primary at ~40% opacity approximation
 
     def _on_focus_out(self, e=None):
-        self.border_frame.configure(bg=GLASS_BORDER)
+        self.border_frame.configure(bg=GLASS_HIGHLIGHT)
 
     def get(self):
         return self.entry.get()
@@ -416,24 +433,28 @@ class GlassButton(tk.Canvas):
     Styles: "primary" (blue), "secondary" (glass), "danger" (red outline)
     """
     STYLES = {
+        # Primary: vibrant gradient from primary → primary-fixed-dim (135°, simulated as mid-blend)
         "primary": {
-            "bg": ACCENT_BLUE, "fg": "#ffffff",
-            "hover_bg": "#0077ED", "press_bg": "#0066CC",
+            "bg": "#6ba2f0", "fg": "#002e60",
+            "hover_bg": ACCENT_BLUE, "press_bg": ACCENT_BLUE_DIM,
             "border": ACCENT_BLUE,
         },
+        # Secondary: glass-filled surface-container-high, ghost border (surface-variant)
         "secondary": {
             "bg": GLASS_ELEVATED, "fg": TEXT_PRIMARY,
             "hover_bg": GLASS_HIGHLIGHT, "press_bg": GLASS_BORDER,
-            "border": GLASS_BORDER,
+            "border": GLASS_HIGHLIGHT,
         },
+        # Danger: no background, error text with subtle hover tint
         "danger": {
             "bg": GLASS_SURFACE, "fg": ACCENT_RED,
             "hover_bg": "#1a1015", "press_bg": "#150a0a",
-            "border": GLASS_BORDER,
+            "border": GLASS_HIGHLIGHT,
         },
+        # Ghost: no background, muted text, tertiary glow on hover
         "ghost": {
             "bg": "transparent", "fg": TEXT_SECONDARY,
-            "hover_bg": GLASS_ELEVATED, "press_bg": GLASS_BORDER,
+            "hover_bg": GLASS_ELEVATED, "press_bg": GLASS_HIGHLIGHT,
             "border": "transparent",
         },
     }
@@ -598,9 +619,9 @@ class GlassToggle(tk.Canvas):
         self.delete("all")
         p = self._anim_progress
         
-        # Track color interpolation
-        off_color = GLASS_BORDER
-        on_color = ACCENT_BLUE
+        # Track color: secondary (#9392ff) for active per Stitch spec
+        off_color = GLASS_HIGHLIGHT
+        on_color = ACCENT_PURPLE
         
         # Simple color blend (approximate)
         track_color = on_color if p > 0.5 else off_color
@@ -676,17 +697,23 @@ class GlassProgress(tk.Canvas):
         w = self.winfo_width() or 1
         h = self.winfo_height() or 6
         r = h // 2
-        
-        # Track background
-        self._pill(0, 0, w, h, r, fill=GLASS_ELEVATED)
-        
-        # Progress fill
+
+        # Track: surface-container-highest
+        self._pill(0, 0, w, h, r, fill=GLASS_HIGHLIGHT)
+
         pw = max(h, int(w * self._value / 100))
         if self._value > 0:
-            self._pill(0, 0, pw, h, r, fill=ACCENT_BLUE)
-            # Highlight on progress
+            # Simulate primary→tertiary gradient: draw two overlapping fills
+            # Left segment: primary (#7fafff)
+            mid = int(pw * 0.55)
+            if mid > h:
+                self._pill(0, 0, mid, h, r, fill=ACCENT_BLUE)
+            # Right segment: blend toward tertiary (#d277ff) — use mid-blend color
+            if pw > mid:
+                self._pill(max(0, mid - r), 0, pw, h, r, fill="#a88aff")
+            # Shimmer highlight (liquid glass top edge)
             if pw > r * 2:
-                self._pill(2, 1, pw-2, h//2, r//2, fill="#2d4a6d")
+                self._pill(2, 1, pw - 2, h // 2, r // 2, fill="#9ab8ff")
 
     def _pill(self, x1, y1, x2, y2, r, **kw):
         if x2 - x1 < r * 2:
@@ -821,7 +848,7 @@ class GlassScrollbar(tk.Canvas):
         thumb_h = max(30, (self._thumb_bottom - self._thumb_top) * h)
         thumb_y = self._thumb_top * h
         
-        color = GLASS_HIGHLIGHT if self._hover or self._dragging else "#3a3a4d"
+        color = TEXT_QUATERNARY if self._hover or self._dragging else "#333336"
         
         # Draw rounded thumb
         r = 3
@@ -974,9 +1001,9 @@ class App(tk.Tk):
         
         icon_canvas = tk.Canvas(hero, width=48, height=48, bg=GLASS_BG, highlightthickness=0)
         icon_canvas.pack(side="left", padx=(0, MD))
-        icon_canvas.create_oval(2, 2, 46, 46, fill=ACCENT_BLUE, outline="")
-        icon_canvas.create_oval(6, 6, 42, 42, fill="#0066CC", outline="")
-        icon_canvas.create_text(24, 24, text="⚡", font=(_FF, 18), fill="#ffffff")
+        icon_canvas.create_oval(2, 2, 46, 46, fill="#3a5a80", outline="")  # primary container tint
+        icon_canvas.create_oval(6, 6, 42, 42, fill=ACCENT_BLUE, outline="")
+        icon_canvas.create_text(24, 24, text="⚡", font=(_FF, 18), fill="#002e60")  # on-primary
         
         text_col = tk.Frame(hero, bg=GLASS_BG)
         text_col.pack(side="left", fill="x")
@@ -1008,8 +1035,9 @@ class App(tk.Tk):
         for label, value, warn in [("Save to folder", "subfolder", False), ("Replace originals ⚠", "inplace", True)]:
             rb = tk.Radiobutton(mode_row, text=label, variable=self.v_out_mode, value=value,
                                command=self._toggle_output_mode, font=FONT_CAPTION,
-                               bg=GLASS_SURFACE, fg=WARNING if warn else TEXT_SECONDARY,
-                               selectcolor=GLASS_SURFACE, activebackground=GLASS_SURFACE,
+                               bg=GLASS_SURFACE, fg=ACCENT_YELLOW if warn else TEXT_SECONDARY,
+                               selectcolor=GLASS_ELEVATED, activebackground=GLASS_SURFACE,
+                               activeforeground=TEXT_PRIMARY,
                                highlightthickness=0, cursor="hand2")
             rb.pack(side="left", padx=(0, LG))
 
@@ -1051,7 +1079,7 @@ class App(tk.Tk):
         tk.Label(opts_row, text="Resolution", font=FONT_CAPTION, fg=TEXT_TERTIARY, bg=GLASS_SURFACE).pack(side="left")
         make_glass_combo(opts_row, self.v_res, ["1080", "720", "540", "480", "360"], 5).pack(side="left", padx=(SM, XS))
         tk.Label(opts_row, text="p", font=FONT_CAPTION, fg=TEXT_TERTIARY, bg=GLASS_SURFACE).pack(side="left")
-        tk.Frame(opts_row, bg=GLASS_BORDER, width=1).pack(side="left", fill="y", padx=MD, pady=2)
+        tk.Frame(opts_row, bg=GLASS_BG, width=LG).pack(side="left")
         tk.Label(opts_row, text="FPS", font=FONT_CAPTION, fg=TEXT_TERTIARY, bg=GLASS_SURFACE).pack(side="left")
         make_glass_combo(opts_row, self.v_fps, ["16", "20", "24", "30"], 4).pack(side="left", padx=(SM, 0))
 
@@ -1061,11 +1089,15 @@ class App(tk.Tk):
         
         deps = self._get_dependency_status()
         for text, ok in deps:
-            badge = tk.Frame(dep_row, bg=GLASS_ELEVATED if ok else "#2a1a1a")
-            badge.pack(side="left", padx=(0, SM))
+            badge_bg = GLASS_ELEVATED if ok else "#1a0f0f"
+            badge = tk.Frame(dep_row, bg=GLASS_HIGHLIGHT)
+            badge.pack(side="left", padx=(0, XS))
+            inner_badge = tk.Frame(badge, bg=badge_bg)
+            inner_badge.pack(padx=1, pady=1)
             color = SUCCESS if ok else WARNING
-            icon = "✓" if ok else "⚠"
-            tk.Label(badge, text=f" {icon} {text} ", font=FONT_CAPTION, fg=color, bg=badge.cget("bg")).pack(padx=XS, pady=XXS)
+            icon = "✓" if ok else "!"
+            tk.Label(inner_badge, text=f" {icon}  {text} ", font=FONT_CAPTION,
+                    fg=color, bg=badge_bg).pack(padx=XS, pady=XXS)
 
         # ── Footer in left column ─────────────────────────────────────────────
         self._build_footer(p)
@@ -1113,10 +1145,10 @@ class App(tk.Tk):
         log_header.pack(fill="x", padx=MD, pady=(MD, SM))
         tk.Label(log_header, text="Activity Log", font=FONT_HEADLINE, fg=TEXT_PRIMARY, bg=GLASS_SURFACE).pack(anchor="w")
         
-        log_frame = tk.Frame(log_card.body, bg="#0a0a10")
+        log_frame = tk.Frame(log_card.body, bg=GLASS_INSET)
         log_frame.pack(fill="both", expand=True, padx=MD, pady=(0, MD))
-        
-        self.txt_log = tk.Text(log_frame, bg="#0a0a10", fg=TEXT_SECONDARY,
+
+        self.txt_log = tk.Text(log_frame, bg=GLASS_INSET, fg=TEXT_SECONDARY,
                                font=FONT_MONO if shutil.which("cascadia") else FONT_MONO_ALT,
                                wrap="word", relief="flat", bd=0, padx=MD, pady=MD,
                                state="disabled", cursor="arrow")
@@ -1166,28 +1198,28 @@ class App(tk.Tk):
         chips_row.pack(pady=(LG, 0))
         
         for icon, label, url in SOCIALS:
-            chip = tk.Frame(chips_row, bg=GLASS_BORDER, cursor="hand2")
-            chip_inner = tk.Frame(chip, bg=GLASS_ELEVATED)
+            chip = tk.Frame(chips_row, bg=GLASS_HIGHLIGHT, cursor="hand2")
+            chip_inner = tk.Frame(chip, bg=GLASS_SURFACE)
             chip_inner.pack(padx=1, pady=1)
-            
+
             chip_label = tk.Label(chip_inner,
                                  text=f"{icon}  {label}",
                                  font=FONT_CAPTION, fg=TEXT_SECONDARY,
-                                 bg=GLASS_ELEVATED,
+                                 bg=GLASS_SURFACE,
                                  padx=MD, pady=XS+2, cursor="hand2")
             chip_label.pack()
             chip.pack(side="left", padx=XS)
-            
-            # Hover effects
+
+            # Hover: primary ghost border + tertiary text glow
             def make_handlers(ch, ci, cl, u):
                 def enter(e):
                     ch.configure(bg=ACCENT_BLUE)
-                    ci.configure(bg=GLASS_SURFACE)
-                    cl.configure(bg=GLASS_SURFACE, fg=ACCENT_CYAN)
-                def leave(e):
-                    ch.configure(bg=GLASS_BORDER)
                     ci.configure(bg=GLASS_ELEVATED)
-                    cl.configure(bg=GLASS_ELEVATED, fg=TEXT_SECONDARY)
+                    cl.configure(bg=GLASS_ELEVATED, fg=ACCENT_TERTIARY)
+                def leave(e):
+                    ch.configure(bg=GLASS_HIGHLIGHT)
+                    ci.configure(bg=GLASS_SURFACE)
+                    cl.configure(bg=GLASS_SURFACE, fg=TEXT_SECONDARY)
                 def click(e):
                     webbrowser.open(u)
                 return enter, leave, click
@@ -1203,21 +1235,20 @@ class App(tk.Tk):
     # ══════════════════════════════════════════════════════════════════════════
 
     def _divider(self, parent):
-        """Create a subtle horizontal divider."""
-        div = tk.Frame(parent, bg=GLASS_BORDER, height=1)
-        div.pack(fill="x", padx=XXL, pady=LG)
+        """Tonal gap instead of hairline — Stitch No-Line Rule."""
+        tk.Frame(parent, bg=GLASS_BG, height=LG).pack(fill="x")
 
     def _section_header(self, parent, text, icon=""):
-        """Create a section header with icon and label."""
+        """Section header — label-md style, no divider beneath."""
         header = tk.Frame(parent, bg=GLASS_BG)
-        header.pack(fill="x", padx=XXL, pady=(SM, SM))
-        
+        header.pack(fill="x", padx=XL, pady=(LG, XS))
+
         if icon:
-            tk.Label(header, text=icon, font=FONT_OVERLINE,
-                    fg=TEXT_TERTIARY, bg=GLASS_BG).pack(side="left", padx=(0, SM))
-        
+            tk.Label(header, text=icon, font=FONT_CAPTION,
+                    fg=TEXT_TERTIARY, bg=GLASS_BG).pack(side="left", padx=(0, XS))
+
         tk.Label(header, text=text,
-                font=FONT_OVERLINE, fg=TEXT_TERTIARY, bg=GLASS_BG,
+                font=FONT_OVERLINE, fg=ACCENT_BLUE, bg=GLASS_BG,
                 anchor="w").pack(side="left")
 
     def _get_dependency_status(self):

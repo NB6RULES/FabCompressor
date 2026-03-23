@@ -4,7 +4,10 @@
 a = Analysis(
     ['fab_compressor.py'],
     pathex=[],
-    binaries=[],
+    binaries=[
+        (r'C:\ffmpeg\bin\ffmpeg.exe', '.'),
+        (r'C:\ffmpeg\bin\ffprobe.exe', '.'),
+    ],
     datas=[],
     hiddenimports=[],
     hookspath=[],
